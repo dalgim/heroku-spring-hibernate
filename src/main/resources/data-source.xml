@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <beans profile="dev">
+
+        <bean id="sessionFactory"
+              class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+            <property name="dataSource" ref="dataSource"/>
+            <property name="packagesToScan" value="com.dalgim"/>
+            <property name="hibernateProperties">
+                <value>
+                    hibernate.format_sql=true
+                    hibernate.dialect=org.hibernate.dialect.MySQLDialect
+                </value>
+            </property>
+        </bean>
+
+
+        <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource">
+            <property name="url" value="jdbc:mysql://localhost:3306/test05" />
+            <property name="username" value="root" />
+            <property name="password" value="root" />
+        </bean>
+
+        <bean id="transactionManager" class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+            <property name="sessionFactory">
+                <ref bean="sessionFactory" />
+            </property>
+        </bean>
+    </beans>
+    <beans profile="prod">
+
+        <bean id="sessionFactory"
+              class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+            <property name="dataSource" ref="dataSource"/>
+            <property name="packagesToScan" value="com.dalgim"/>
+            <property name="hibernateProperties">
+                <value>
+                    hibernate.format_sql=true
+                    hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+                </value>
+            </property>
+        </bean>
+
+
+        <bean class="java.net.URI" id="dbUrl">
+            <constructor-arg value="${DATABASE_URL}"/>
+        </bean>
+        <bean class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close" id="dataSource">
+            <property name="driverClassName" value="org.hibernate.dialect.PostgreSQLDialect"/>
+            <property name="url" value="#{ 'jdbc:postgresql://' + @dbUrl.getHost() + @dbUrl.getPath() }"/>
+            <property name="username" value="#{ @dbUrl.getUserInfo().split(':')[0] }"/>
+            <property name="password" value="#{ @dbUrl.getUserInfo().split(':')[1] }"/>
+            <property name="testOnBorrow" value="true"/>
+            <property name="testOnReturn" value="true"/>
+            <property name="testWhileIdle" value="true"/>
+            <property name="timeBetweenEvictionRunsMillis" value="1800000"/>
+            <property name="numTestsPerEvictionRun" value="3"/>
+            <property name="minEvictableIdleTimeMillis" value="1800000"/>
+            <property name="validationQuery" value="SELECT version();"/>
+        </bean>
+        <bean id="transactionManager" class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+            <property name="sessionFactory">
+                <ref bean="sessionFactory" />
+            </property>
+        </bean>
+    </beans>
+
+</beans>
